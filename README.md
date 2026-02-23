@@ -74,6 +74,11 @@ Incluye fila final `TOTAL` con suma de tiempo y suma de OO.
 - `processor.py` centraliza reglas de cálculo para soportar nuevas métricas.
 - `webapp.py` expone endpoint local para integrar otras interfaces.
 
+
+## Guía completa de instalación
+
+Consulta la guía detallada en `SETUP_PASO_A_PASO.md` para configurar todo desde cero (Jira + Google + ejecución final).
+
 ## Pruebas
 
 ```bash
