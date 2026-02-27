@@ -36,7 +36,13 @@ def load_env_file(path: str = ".env") -> None:
     """Carga variables simples KEY=VALUE desde .env sin dependencias externas."""
     env_path = Path(path)
     if not env_path.exists():
+        candidate = Path("..") / path
+        if candidate.exists():
+            env_path = candidate
+    if not env_path.exists():
         return
+
+    env_dir = str(env_path.resolve().parent)
 
     for raw_line in env_path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
@@ -45,6 +51,8 @@ def load_env_file(path: str = ".env") -> None:
         key, value = line.split("=", 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
+        if key == "GOOGLE_SERVICE_ACCOUNT_FILE" and not Path(value).is_absolute():
+            value = str(Path(env_dir) / value)
         os.environ.setdefault(key, value)
 
 

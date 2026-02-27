@@ -1,0 +1,100 @@
+Metadata-Version: 2.4
+Name: bugfix-automator
+Version: 0.1.0
+Summary: SaaS base para verificación automática de bugs con Jira + Google Sheets
+Author: BugFix Automator
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.31.0
+Requires-Dist: google-api-python-client>=2.149.0
+Requires-Dist: google-auth>=2.35.0
+Requires-Dist: google-auth-oauthlib>=1.2.1
+Provides-Extra: dev
+Requires-Dist: pytest>=8.3.3; extra == "dev"
+
+# BugFix Automator
+
+Base de SaaS para **bug-fix verification** con tecnología gratuita:
+
+1. Extrae issues desde Jira (estado configurable, por defecto `For Review`).
+2. Calcula métricas de tiempo y ocurrencias de `OO`.
+3. Genera un reporte en Google Sheets dentro de Google Drive.
+4. Incluye dashboard visual moderno para operar la herramienta sin CLI.
+
+## Arquitectura modular
+
+- `jira_client.py` → autenticación y búsqueda de issues por estado.
+- `drive_client.py` → creación de spreadsheet y escritura de datos.
+- `processor.py` → cálculos de tiempo y conteo de `OO`.
+- `report_generator.py` → armado de filas y publicación final.
+- `webapp.py` → interfaz visual enterprise (frontend + endpoint local).
+- `main.py` → orquestación end-to-end (CLI y modo web).
+
+## Requisitos
+
+- Python 3.10+
+- Cuenta Jira Cloud + API token.
+- Proyecto de Google Cloud con Service Account y APIs:
+  - Google Sheets API
+  - Google Drive API
+
+## Setup local
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+cp .env.example .env
+```
+
+Completa `.env` con tus credenciales.
+
+## Ejecución (CLI)
+
+```bash
+python -m bugfix_automator.main
+```
+
+Para cambiar el estado Jira dinámicamente:
+
+```bash
+python -m bugfix_automator.main --status "For Review"
+```
+
+## Ejecución (UI visual)
+
+```bash
+python -m bugfix_automator.main --web --port 8080
+```
+
+Abrir en navegador: `http://localhost:8080`
+
+## Estructura del reporte generado
+
+Columnas:
+- Issue Key
+- Summary
+- Status
+- Assignee
+- Tiempo (minutos)
+- Cantidad de OO
+
+Incluye fila final `TOTAL` con suma de tiempo y suma de OO.
+
+## Escalabilidad
+
+- El filtro de estado se parametriza por CLI, UI o `.env`.
+- Se puede extender `JiraClient` para JQL avanzado (proyecto, labels, sprint, etc.).
+- `processor.py` centraliza reglas de cálculo para soportar nuevas métricas.
+- `webapp.py` expone endpoint local para integrar otras interfaces.
+
+
+## Guía completa de instalación
+
+Consulta la guía detallada en `SETUP_PASO_A_PASO.md` para configurar todo desde cero (Jira + Google + ejecución final).
+
+## Pruebas
+
+```bash
+pytest
+```

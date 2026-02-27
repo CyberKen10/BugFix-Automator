@@ -17,37 +17,48 @@ class JiraClient:
         self._config = config
         self._timeout = timeout_seconds
 
-    def fetch_issues_by_status(self, status: str, max_results: int = 200) -> list[JiraIssue]:
-        """Obtiene issues filtrados por estado usando JQL."""
+    def fetch_issues_by_status(
+        self,
+        status: str,
+        project: str | None = None,
+        parent_key: str | None = None,
+        max_results: int = 200,
+    ) -> list[JiraIssue]:
+        """Obtiene issues filtrados por estado (y opcionalmente epic/parent) usando JQL."""
         url = f"{self._config.base_url}/rest/api/3/search/jql"
         headers = {"Accept": "application/json"}
         auth = (self._config.email, self._config.api_token)
+
+        jql = f'status = "{status}"'
+        if parent_key:
+            jql = f'parent = "{parent_key}" AND {jql}'
+        elif project:
+            jql = f'project = "{project}" AND {jql}'
+        jql += " ORDER BY updated DESC"
 
         start_at = 0
         issues: list[JiraIssue] = []
 
         while True:
-            payload = {
-                "jql": f'status = "{status}" ORDER BY updated DESC',
+            params = {
+                "jql": jql,
                 "maxResults": min(max_results, 100),
                 "startAt": start_at,
-                "fields": [
-                    "summary",
-                    "status",
-                    "assignee",
-                    "description",
-                    "timespent",
-                    "timeoriginalestimate",
-                ],
+                "fields": "summary,status,assignee,description,timespent,timeoriginalestimate",
             }
-            response = requests.post(
+            response = requests.get(
                 url,
-                json=payload,
+                params=params,
                 headers=headers,
                 auth=auth,
                 timeout=self._timeout,
             )
-            response.raise_for_status()
+            if response.status_code != 200:
+                detail = response.text[:500] if response.text else "sin detalle"
+                raise RuntimeError(
+                    f"Jira respondió {response.status_code}: {detail}"
+                )
+
 
             data = response.json()
             batch = [self._to_issue(raw_issue) for raw_issue in data.get("issues", [])]

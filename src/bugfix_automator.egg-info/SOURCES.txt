@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+src/bugfix_automator/__init__.py
+src/bugfix_automator/config.py
+src/bugfix_automator/drive_client.py
+src/bugfix_automator/jira_client.py
+src/bugfix_automator/main.py
+src/bugfix_automator/models.py
+src/bugfix_automator/processor.py
+src/bugfix_automator/report_generator.py
+src/bugfix_automator/webapp.py
+src/bugfix_automator.egg-info/PKG-INFO
+src/bugfix_automator.egg-info/SOURCES.txt
+src/bugfix_automator.egg-info/dependency_links.txt
+src/bugfix_automator.egg-info/requires.txt
+src/bugfix_automator.egg-info/top_level.txt
+tests/test_processor.py
