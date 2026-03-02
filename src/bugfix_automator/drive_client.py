@@ -98,32 +98,45 @@ class DriveClient:
             fields="spreadsheetId,spreadsheetUrl,sheets/properties",
         ).execute()
 
-        old_sheet_ids = [
-            s["properties"]["sheetId"] for s in existing["sheets"]
-        ]
+        existing_tabs = {
+            s["properties"]["title"]: s["properties"]["sheetId"]
+            for s in existing["sheets"]
+        }
 
         tab_names = ["Issues"]
         for rn in sorted(round_numbers or []):
             tab_names.append(f"Round {rn}")
         tab_names.append("Summary")
 
-        add_requests: list[dict[str, Any]] = [
-            {"addSheet": {"properties": {"title": name, "index": i}}}
-            for i, name in enumerate(tab_names)
-        ]
+        tabs_to_create = [name for name in tab_names if name not in existing_tabs]
+        tabs_to_clear = [name for name in tab_names if name in existing_tabs]
 
-        self._sheets.spreadsheets().batchUpdate(
-            spreadsheetId=spreadsheet_id,
-            body={"requests": add_requests},
-        ).execute()
-
-        delete_requests = [
-            {"deleteSheet": {"sheetId": sid}} for sid in old_sheet_ids
-        ]
-        if delete_requests:
+        if tabs_to_create:
+            add_requests: list[dict[str, Any]] = [
+                {"addSheet": {"properties": {"title": name}}}
+                for name in tabs_to_create
+            ]
             self._sheets.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
-                body={"requests": delete_requests},
+                body={"requests": add_requests},
+            ).execute()
+
+        if tabs_to_clear:
+            clear_data = [
+                {"range": f"'{name}'!A:Z"} for name in tabs_to_clear
+            ]
+            self._sheets.spreadsheets().values().batchClear(
+                spreadsheetId=spreadsheet_id,
+                body={"ranges": [d["range"] for d in clear_data]},
+            ).execute()
+
+            unmerge_requests = [
+                {"unmergeCells": {"range": {"sheetId": existing_tabs[name]}}}
+                for name in tabs_to_clear
+            ]
+            self._sheets.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={"requests": unmerge_requests},
             ).execute()
 
         self._sheets.spreadsheets().batchUpdate(

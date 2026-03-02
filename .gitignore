@@ -3,3 +3,10 @@ __pycache__/
 .venv/
 .env
 *.pyc
+
+# Credenciales — NUNCA subir
+service-account.json
+*.json
+!pyproject.toml
+bugfix-488716-b9d245700d25.json
+credentials.json
